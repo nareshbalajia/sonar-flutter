@@ -41,6 +41,7 @@ import org.sonar.api.rule.RuleKey;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -124,13 +125,13 @@ public class DartAnalyzerSensor implements Sensor {
     private List<DartAnalyzerReportIssue> getIssuesFromAnalyzer(String analyzerCommand) throws IOException {
         try {
             LOGGER.info("Running '{} analyze'...", analyzerCommand);
-            String output = new ProcBuilder(analyzerCommand, "analyze")
+            byte[] outputBytes = new ProcBuilder(analyzerCommand, "analyze")
                     .withTimeoutMillis(ANALYZER_TIMEOUT)
                     .ignoreExitStatus()
                     .run()
-                    .getOutputString();
-
-            List<DartAnalyzerReportIssue> issues = new DartAnalyzerReportParser().parse(output);
+                    .getOutputBytes();
+            String outputString = new String(outputBytes, StandardCharsets.UTF_8);
+            List<DartAnalyzerReportIssue> issues = new DartAnalyzerReportParser().parse(outputString);
             LOGGER.info("Found issues: {}", issues.size());
             return issues;
         } catch (Exception e) {
